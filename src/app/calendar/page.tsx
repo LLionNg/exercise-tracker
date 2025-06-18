@@ -54,8 +54,8 @@ export default function CalendarPage() {
                   fontWeight: '500',
                   transition: 'var(--transition-theme)'
                 }}
-                onMouseOver={(e) => e.target.style.color = 'var(--text-primary)'}
-                onMouseOut={(e) => e.target.style.color = 'var(--text-secondary)'}
+                onMouseOver={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+                onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
               >
                 <ArrowLeft size={20} />
                 <span>Back to Dashboard</span>

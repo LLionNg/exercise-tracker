@@ -94,12 +94,12 @@ export default function CleanHomePage() {
               boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)'
             }}
             onMouseOver={(e) => {
-              e.target.style.backgroundColor = '#4338ca'
-              e.target.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.backgroundColor = '#4338ca'
+              e.currentTarget.style.transform = 'translateY(-2px)'
             }}
             onMouseOut={(e) => {
-              e.target.style.backgroundColor = '#4f46e5'
-              e.target.style.transform = 'translateY(0)'
+              e.currentTarget.style.backgroundColor = '#4f46e5'
+              e.currentTarget.style.transform = 'translateY(0)'
             }}
           >
             Get Started

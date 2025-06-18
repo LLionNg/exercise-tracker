@@ -85,10 +85,10 @@ export default function CleanLoginPage() {
             transition: 'all 0.2s ease'
           }}
           onMouseOver={(e) => {
-            if (!isLoading) e.target.style.backgroundColor = '#4338ca'
+            if (!isLoading) e.currentTarget.style.backgroundColor = '#4338ca'
           }}
           onMouseOut={(e) => {
-            if (!isLoading) e.target.style.backgroundColor = '#4f46e5'
+            if (!isLoading) e.currentTarget.style.backgroundColor = '#4f46e5'
           }}
         >
           {isLoading ? 'Signing in...' : 'Sign in with Google'}

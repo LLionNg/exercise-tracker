@@ -129,14 +129,14 @@ export default function ThemedCalendar({ userId, isOwnCalendar = true }: ThemedC
               boxShadow: 'var(--shadow-sm)'
             }}
             onMouseOver={(e) => {
-              e.target.style.backgroundColor = 'var(--text-accent-hover)'
-              e.target.style.transform = 'translateY(-1px)'
-              e.target.style.boxShadow = 'var(--shadow-light)'
+              e.currentTarget.style.backgroundColor = 'var(--text-accent-hover)'
+              e.currentTarget.style.transform = 'translateY(-1px)'
+              e.currentTarget.style.boxShadow = 'var(--shadow-light)'
             }}
             onMouseOut={(e) => {
-              e.target.style.backgroundColor = 'var(--text-accent)'
-              e.target.style.transform = 'translateY(0)'
-              e.target.style.boxShadow = 'var(--shadow-sm)'
+              e.currentTarget.style.backgroundColor = 'var(--text-accent)'
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = 'var(--shadow-sm)'
             }}
           >
             <Plus size={20} />
@@ -177,12 +177,12 @@ export default function ThemedCalendar({ userId, isOwnCalendar = true }: ThemedC
                 justifyContent: 'center'
               }}
               onMouseOver={(e) => {
-                e.target.style.backgroundColor = 'var(--bg-hover)'
-                e.target.style.borderColor = 'var(--border-hover)'
+                e.currentTarget.style.backgroundColor = 'var(--bg-hover)'
+                e.currentTarget.style.borderColor = 'var(--border-hover)'
               }}
               onMouseOut={(e) => {
-                e.target.style.backgroundColor = 'var(--bg-secondary)'
-                e.target.style.borderColor = 'var(--border-color)'
+                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'
+                e.currentTarget.style.borderColor = 'var(--border-color)'
               }}
             >
               <ChevronLeft size={20} color="var(--text-secondary)" />
@@ -212,12 +212,12 @@ export default function ThemedCalendar({ userId, isOwnCalendar = true }: ThemedC
                 justifyContent: 'center'
               }}
               onMouseOver={(e) => {
-                e.target.style.backgroundColor = 'var(--bg-hover)'
-                e.target.style.borderColor = 'var(--border-hover)'
+                e.currentTarget.style.backgroundColor = 'var(--bg-hover)'
+                e.currentTarget.style.borderColor = 'var(--border-hover)'
               }}
               onMouseOut={(e) => {
-                e.target.style.backgroundColor = 'var(--bg-secondary)'
-                e.target.style.borderColor = 'var(--border-color)'
+                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'
+                e.currentTarget.style.borderColor = 'var(--border-color)'
               }}
             >
               <ChevronRight size={20} color="var(--text-secondary)" />
@@ -286,14 +286,14 @@ export default function ThemedCalendar({ userId, isOwnCalendar = true }: ThemedC
                   }}
                   onMouseOver={(e) => {
                     if (!isSelected) {
-                      e.target.style.backgroundColor = 'var(--bg-hover)'
-                      e.target.style.transform = 'scale(1.05)'
+                      e.currentTarget.style.backgroundColor = 'var(--bg-hover)'
+                      e.currentTarget.style.transform = 'scale(1.05)'
                     }
                   }}
                   onMouseOut={(e) => {
                     if (!isSelected) {
-                      e.target.style.backgroundColor = isToday ? 'var(--bg-hover)' : 'var(--bg-secondary)'
-                      e.target.style.transform = 'scale(1)'
+                      e.currentTarget.style.backgroundColor = isToday ? 'var(--bg-hover)' : 'var(--bg-secondary)'
+                      e.currentTarget.style.transform = 'scale(1)'
                     }
                   }}
                 >
@@ -483,12 +483,12 @@ export default function ThemedCalendar({ userId, isOwnCalendar = true }: ThemedC
                       transition: 'all 0.2s ease'
                     }}
                     onMouseOver={(e) => {
-                      e.target.style.backgroundColor = 'var(--text-accent-hover)'
-                      e.target.style.transform = 'translateY(-1px)'
+                      e.currentTarget.style.backgroundColor = 'var(--text-accent-hover)'
+                      e.currentTarget.style.transform = 'translateY(-1px)'
                     }}
                     onMouseOut={(e) => {
-                      e.target.style.backgroundColor = 'var(--text-accent)'
-                      e.target.style.transform = 'translateY(0)'
+                      e.currentTarget.style.backgroundColor = 'var(--text-accent)'
+                      e.currentTarget.style.transform = 'translateY(0)'
                     }}
                   >
                     Add Exercise
@@ -636,12 +636,12 @@ function ScheduleCard({
       overflow: 'hidden'
     }}
     onMouseOver={(e) => {
-      e.target.style.transform = 'translateY(-2px)'
-      e.target.style.boxShadow = 'var(--shadow-light)'
+      e.currentTarget.style.transform = 'translateY(-2px)'
+      e.currentTarget.style.boxShadow = 'var(--shadow-light)'
     }}
     onMouseOut={(e) => {
-      e.target.style.transform = 'translateY(0)'
-      e.target.style.boxShadow = 'none'
+      e.currentTarget.style.transform = 'translateY(0)'
+      e.currentTarget.style.boxShadow = 'none'
     }}
     >
       {/* Status indicator bar */}
@@ -726,14 +726,14 @@ function ScheduleCard({
                 }}
                 onMouseOver={(e) => {
                   if (!updating) {
-                    e.target.style.backgroundColor = schedule.completed ? '#16a34a' : '#4b5563'
-                    e.target.style.transform = 'scale(1.02)'
+                    e.currentTarget.style.backgroundColor = schedule.completed ? '#16a34a' : '#4b5563'
+                    e.currentTarget.style.transform = 'scale(1.02)'
                   }
                 }}
                 onMouseOut={(e) => {
                   if (!updating) {
-                    e.target.style.backgroundColor = schedule.completed ? 'var(--color-success)' : 'var(--text-secondary)'
-                    e.target.style.transform = 'scale(1)'
+                    e.currentTarget.style.backgroundColor = schedule.completed ? 'var(--color-success)' : 'var(--text-secondary)'
+                    e.currentTarget.style.transform = 'scale(1)'
                   }
                 }}
               >
@@ -777,14 +777,14 @@ function ScheduleCard({
               }}
               onMouseOver={(e) => {
                 if (!deleting) {
-                  e.target.style.backgroundColor = '#dc2626'
-                  e.target.style.transform = 'scale(1.02)'
+                  e.currentTarget.style.backgroundColor = '#dc2626'
+                  e.currentTarget.style.transform = 'scale(1.02)'
                 }
               }}
               onMouseOut={(e) => {
                 if (!deleting) {
-                  e.target.style.backgroundColor = 'var(--color-danger)'
-                  e.target.style.transform = 'scale(1)'
+                  e.currentTarget.style.backgroundColor = 'var(--color-danger)'
+                  e.currentTarget.style.transform = 'scale(1)'
                 }
               }}
             >
@@ -873,7 +873,7 @@ function AddExerciseModal({
       backdropFilter: 'blur(4px)'
     }}
     onClick={(e) => {
-      if (e.target === e.currentTarget) onClose()
+      if (e.currentTarget === e.currentTarget) onClose()
     }}
     >
       <div style={{
@@ -937,12 +937,12 @@ function AddExerciseModal({
                 transition: 'var(--transition-theme)'
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = 'var(--border-focus)'
-                e.target.style.backgroundColor = 'var(--bg-secondary)'
+                e.currentTarget.style.borderColor = 'var(--border-focus)'
+                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = 'var(--border-color)'
-                e.target.style.backgroundColor = 'var(--bg-tertiary)'
+                e.currentTarget.style.borderColor = 'var(--border-color)'
+                e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'
               }}
               required
               autoFocus
@@ -975,12 +975,12 @@ function AddExerciseModal({
                 transition: 'var(--transition-theme)'
               }}
               onFocus={(e) => {
-                e.target.style.borderColor = 'var(--border-focus)'
-                e.target.style.backgroundColor = 'var(--bg-secondary)'
+                e.currentTarget.style.borderColor = 'var(--border-focus)'
+                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'
               }}
               onBlur={(e) => {
-                e.target.style.borderColor = 'var(--border-color)'
-                e.target.style.backgroundColor = 'var(--bg-tertiary)'
+                e.currentTarget.style.borderColor = 'var(--border-color)'
+                e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'
               }}
             >
               <option value="morning">🌅 Morning</option>
@@ -1005,14 +1005,14 @@ function AddExerciseModal({
                 transition: 'all 0.2s ease'
               }}
               onMouseOver={(e) => {
-                e.target.style.backgroundColor = 'var(--bg-hover)'
-                e.target.style.borderColor = 'var(--border-hover)'
-                e.target.style.color = 'var(--text-primary)'
+                e.currentTarget.style.backgroundColor = 'var(--bg-hover)'
+                e.currentTarget.style.borderColor = 'var(--border-hover)'
+                e.currentTarget.style.color = 'var(--text-primary)'
               }}
               onMouseOut={(e) => {
-                e.target.style.backgroundColor = 'var(--bg-secondary)'
-                e.target.style.borderColor = 'var(--border-color)'
-                e.target.style.color = 'var(--text-secondary)'
+                e.currentTarget.style.backgroundColor = 'var(--bg-secondary)'
+                e.currentTarget.style.borderColor = 'var(--border-color)'
+                e.currentTarget.style.color = 'var(--text-secondary)'
               }}
             >
               Cancel
@@ -1039,14 +1039,14 @@ function AddExerciseModal({
               }}
               onMouseOver={(e) => {
                 if (!loading && exerciseType.trim()) {
-                  e.target.style.backgroundColor = 'var(--text-accent-hover)'
-                  e.target.style.transform = 'translateY(-1px)'
+                  e.currentTarget.style.backgroundColor = 'var(--text-accent-hover)'
+                  e.currentTarget.style.transform = 'translateY(-1px)'
                 }
               }}
               onMouseOut={(e) => {
                 if (!loading && exerciseType.trim()) {
-                  e.target.style.backgroundColor = 'var(--text-accent)'
-                  e.target.style.transform = 'translateY(0)'
+                  e.currentTarget.style.backgroundColor = 'var(--text-accent)'
+                  e.currentTarget.style.transform = 'translateY(0)'
                 }
               }}
             >
