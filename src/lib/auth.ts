@@ -12,7 +12,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account: _account, profile: _profile }) {
+    async signIn({ user }) {
       const whitelistedEmails = process.env.WHITELISTED_EMAILS?.split(',').map(email => email.trim()) || []
       return whitelistedEmails.includes(user.email!)
     },
