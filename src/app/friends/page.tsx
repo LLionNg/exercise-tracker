@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, Calendar, Target, TrendingUp, ArrowLeft, ChevronRight } from 'lucide-react'
+import { Users, Calendar, Target, ArrowLeft, ChevronRight } from 'lucide-react'
 
 interface User {
   id: string
@@ -318,7 +318,7 @@ function UserCard({ user, onViewSchedule }: {
       <div className="user-info">
         <div className="avatar">
           {user.image ? (
-            <img src={user.image} alt={user.name || 'User'} className="avatar-img" />
+            <img src={user.image} alt={user.name || 'User'} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
           ) : (
             (user.name?.[0] || user.email[0]).toUpperCase()
           )}
@@ -587,7 +587,7 @@ function UserDetailModal({ user, onClose }: {
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="modal-header">
-          <h2 className="modal-title">{user.name || 'Anonymous User'}'s Workouts</h2>
+          <h2 className="modal-title">{user.name || 'Anonymous User'}&apos;s Workouts</h2>
           <p className="modal-subtitle">Upcoming exercises you can bet on</p>
         </div>
 
@@ -601,7 +601,7 @@ function UserDetailModal({ user, onClose }: {
             <div className="empty-state">
               <Calendar size={48} />
               <h3>No Upcoming Workouts</h3>
-              <p>This user hasn't scheduled any workouts for the next week.</p>
+              <p>This user hasn&apos;t scheduled any workouts for the next week.</p>
             </div>
           ) : (
             <div className="schedules-list">
@@ -747,7 +747,7 @@ function UserDetailModal({ user, onClose }: {
 }
 
 function ScheduleItem({ schedule, onBet }: { 
-  schedule: any, 
+  schedule: { id: string; exerciseType: string; date: Date; timeSlot: string; completed: boolean; bets: any[] },
   onBet: () => void 
 }) {
   const hasActiveBets = schedule.bets && schedule.bets.length > 0
@@ -844,8 +844,8 @@ function ScheduleItem({ schedule, onBet }: {
 }
 
 function BettingForm({ schedule, targetUser, onClose, onSuccess }: {
-  schedule: any,
-  targetUser: any,
+  schedule: { id: string; exerciseType: string; date: Date; timeSlot: string; completed: boolean },
+  targetUser: { id: string; name: string; email: string },
   onClose: () => void,
   onSuccess: () => void
 }) {
@@ -890,7 +890,7 @@ function BettingForm({ schedule, targetUser, onClose, onSuccess }: {
         <div className="bet-target-info">
           <p className="bet-target-label">Betting on</p>
           <p className="bet-target-name">
-            {targetUser.name}'s {schedule.exerciseType}
+            {targetUser.name}&apos;s {schedule.exerciseType}
           </p>
           <p className="bet-target-details">
             {schedule.date.toLocaleDateString()} • {schedule.timeSlot}

@@ -134,7 +134,7 @@ export default function UserProfilePage() {
             <div className="user-info">
               <div className="avatar">
                 {user.image ? (
-                  <img src={user.image} alt={user.name || 'User'} className="avatar-img" />
+                  <img src={user.image} alt={user.name || 'User'} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                 ) : (
                   (user.name?.[0] || user.email[0]).toUpperCase()
                 )}
