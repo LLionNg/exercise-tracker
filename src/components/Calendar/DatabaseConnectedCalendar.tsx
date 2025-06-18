@@ -873,7 +873,7 @@ function AddExerciseModal({
       backdropFilter: 'blur(4px)'
     }}
     onClick={(e) => {
-      if (e.currentTarget === e.currentTarget) onClose()
+      e.stopPropagation()
     }}
     >
       <div style={{
