@@ -314,7 +314,7 @@ export default function CleanHomePage() {
                 margin: 0,
                 fontSize: '14px'
               }}>
-                Your friends can place bets on whether you'll complete your workouts
+                Your friends can place bets on whether you&apos;ll complete your workouts
               </p>
             </div>
 

@@ -243,8 +243,8 @@ export default function ThemedDashboard() {
                   <Users size={24} color="var(--color-purple)" />
                 </div>
                 <div>
-                  <h3 className="action-title">Friends' Schedules</h3>
-                  <p className="action-subtitle">View and bet on friends' workouts</p>
+                  <h3 className="action-title">Friends&apos; Schedules</h3>
+                  <p className="action-subtitle">View and bet on friends&apos; workouts</p>
                 </div>
               </div>
               

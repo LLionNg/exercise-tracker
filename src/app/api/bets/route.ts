@@ -3,14 +3,14 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { targetUserId, scheduleId, prediction, amount } = await request.json()
+    const { targetUserId, scheduleId, prediction, amount } = await _request.json()
 
     // Validate input
     if (!targetUserId || !scheduleId || typeof prediction !== 'boolean' || !amount) {
@@ -151,14 +151,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = new URL(_request.url)
     const userId = searchParams.get('userId') || session.user.id
 
     // Get bets placed by or received by the user

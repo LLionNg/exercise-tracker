@@ -3,20 +3,20 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = new URL(_request.url)
     const userId = searchParams.get('userId') || session.user.id
     const start = searchParams.get('start')
     const end = searchParams.get('end')
 
     // Build where clause
-    const where: any = { userId }
+    const where: { userId: string; date?: { gte: Date; lte: Date } } = { userId }
     
     if (start && end) {
       where.date = {
@@ -55,14 +55,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
+    const body = await _request.json()
     const { date, exerciseType, timeSlot } = body
 
     // Validate input

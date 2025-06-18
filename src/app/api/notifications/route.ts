@@ -3,14 +3,14 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { searchParams } = new URL(request.url)
+    const { searchParams } = new URL(_request.url)
     const unreadOnly = searchParams.get('unreadOnly') === 'true'
     const limit = parseInt(searchParams.get('limit') || '20')
 
@@ -35,14 +35,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PATCH(request: NextRequest) {
+export async function PATCH(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { notificationIds, markAsRead } = await request.json()
+    const { notificationIds, markAsRead } = await _request.json()
 
     const updated = await prisma.notification.updateMany({
       where: {

@@ -2,39 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import { ExerciseSchedule, ScheduleResponse } from '@/types/schedule'
 import { format, isSameDay, startOfMonth, endOfMonth, addMonths, subMonths } from 'date-fns'
 import { Plus, CheckCircle, Clock, Users, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
-
-interface ExerciseSchedule {
-  id: string
-  date: Date
-  exerciseType: string
-  timeSlot: string
-  completed: boolean
-  completedAt?: Date
-  bets: Bet[]
-}
-
-interface ScheduleResponse {
-  id: string
-  date: string
-  exerciseType: string
-  timeSlot: string
-  completed: boolean
-  completedAt?: string
-  bets: Bet[]
-}
-
-interface Bet {
-  id: string
-  placerId: string
-  amount: number
-  prediction: boolean
-  placer: {
-    name: string
-    email: string
-  }
-}
 
 interface ThemedCalendarProps {
   userId?: string

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { ScheduleResponse, Bet } from '@/types/schedule'
 import { Users, Calendar, Target, ArrowLeft, ChevronRight } from 'lucide-react'
 
 interface User {
@@ -8,6 +9,15 @@ interface User {
   name: string
   email: string
   image?: string
+}
+
+interface ScheduleProps {
+  id: string
+  exerciseType: string
+  date: Date
+  timeSlot: string
+  completed: boolean
+  bets: Bet[]
 }
 
 interface UserWithStats extends User {
@@ -102,7 +112,7 @@ export default function FriendsPage() {
               <ArrowLeft size={20} />
             </button>
             <div className="header-text">
-              <h1 className="page-title">Friends' Schedules</h1>
+              <h1 className="page-title">Friends&apos; Schedules</h1>
               <p className="page-subtitle">View workout schedules and place bets on friends</p>
             </div>
           </div>
@@ -567,7 +577,7 @@ function UserDetailModal({ user, onClose }: {
             
             if (response.ok) {
             const data = await response.json()
-            setSchedules(data.map((s: any) => ({
+            setSchedules(data.map((s: ScheduleResponse) => ({
                 ...s,
                 date: new Date(s.date)
             })))
@@ -747,7 +757,7 @@ function UserDetailModal({ user, onClose }: {
 }
 
 function ScheduleItem({ schedule, onBet }: { 
-  schedule: { id: string; exerciseType: string; date: Date; timeSlot: string; completed: boolean; bets: any[] },
+  schedule: ScheduleProps,
   onBet: () => void 
 }) {
   const hasActiveBets = schedule.bets && schedule.bets.length > 0

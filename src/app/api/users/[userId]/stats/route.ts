@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
@@ -51,7 +51,7 @@ export async function GET(
       .sort((a, b) => b.getTime() - a.getTime())
     
     let streakDays = 0
-    let currentDate = new Date()
+    const currentDate = new Date()
     currentDate.setHours(0, 0, 0, 0)
     
     for (const date of sortedCompletedDates) {
