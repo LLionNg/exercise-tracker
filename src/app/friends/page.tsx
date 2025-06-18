@@ -560,9 +560,9 @@ function UserDetailModal({ user, onClose }: {
   user: UserWithStats, 
   onClose: () => void 
 }) {
-  const [schedules, setSchedules] = useState([])
+  const [schedules, setSchedules] = useState<ScheduleProps[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedSchedule, setSelectedSchedule] = useState(null)
+  const [selectedSchedule, setSelectedSchedule] = useState<ScheduleProps | null>(null)
   const [showBetForm, setShowBetForm] = useState(false)
 
   useEffect(() => {
