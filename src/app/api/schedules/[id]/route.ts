@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function PATCH(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -13,12 +13,13 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await _request.json()
     const { completed, completedAt } = body
 
     // Find the schedule and verify ownership
     const schedule = await prisma.exerciseSchedule.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!schedule) {
@@ -31,7 +32,7 @@ export async function PATCH(
 
     // Update the schedule
     const updatedSchedule = await prisma.exerciseSchedule.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         completed: completed ?? schedule.completed,
         completedAt: completedAt ? new Date(completedAt) : null
@@ -53,7 +54,7 @@ export async function PATCH(
 
     // If exercise was just completed or uncompleted, we might need to resolve bets
     if (completed !== undefined && completed !== schedule.completed) {
-      await resolveBets(params.id, completed)
+      await resolveBets(id, completed)
     }
 
     return NextResponse.json(updatedSchedule)
@@ -68,7 +69,7 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -76,9 +77,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
+
     // Find the schedule and verify ownership
     const schedule = await prisma.exerciseSchedule.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { bets: true }
     })
 
@@ -101,7 +104,7 @@ export async function DELETE(
 
     // Delete the schedule
     await prisma.exerciseSchedule.delete({
-      where: { id: params.id }
+      where: { id }
     })
 
     return NextResponse.json({ message: 'Schedule deleted successfully' })
