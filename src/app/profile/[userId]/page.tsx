@@ -204,7 +204,7 @@ export default function UserProfilePage() {
         <div className="calendar-content">
           <div className="calendar-header">
             <h2 className="calendar-title">Exercise Schedule</h2>
-            <p className="calendar-subtitle">View {user.name}'s public workout calendar</p>
+            <p className="calendar-subtitle">View {user.name}&apos;s public workout calendar</p>
           </div>
           
           <div className="calendar-container">

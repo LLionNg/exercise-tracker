@@ -15,6 +15,16 @@ interface ExerciseSchedule {
   bets: Bet[]
 }
 
+interface ScheduleResponse {
+  id: string
+  date: string
+  exerciseType: string
+  timeSlot: string
+  completed: boolean
+  completedAt?: string
+  bets: Bet[]
+}
+
 interface Bet {
   id: string
   placerId: string
@@ -58,7 +68,7 @@ export default function ThemedCalendar({ userId, isOwnCalendar = true }: ThemedC
         
         if (response.ok) {
           const data = await response.json()
-          setSchedules(data.map((s: any) => ({
+          setSchedules(data.map((s: ScheduleResponse) => ({
             ...s,
             date: new Date(s.date)
           })))
@@ -280,7 +290,6 @@ export default function ThemedCalendar({ userId, isOwnCalendar = true }: ThemedC
             {calendarDays.map((date, index) => {
               const daySchedules = getSchedulesForDate(date)
               const hasSchedules = daySchedules.length > 0
-              const allCompleted = daySchedules.length > 0 && daySchedules.every(s => s.completed)
               const hasBets = daySchedules.some(s => s.bets.length > 0)
               const isPast = date < currentDate && !isSameDay(date, currentDate)
               const isCurrentMonth = date.getMonth() === currentMonth.getMonth()
@@ -531,7 +540,7 @@ export default function ThemedCalendar({ userId, isOwnCalendar = true }: ThemedC
                       fetch(`/api/schedules?userId=${targetUserId}&start=${start.toISOString()}&end=${end.toISOString()}`)
                         .then(response => response.json())
                         .then(data => {
-                          setSchedules(data.map((s: any) => ({
+                          setSchedules(data.map((s: ScheduleResponse) => ({
                             ...s,
                             date: new Date(s.date)
                           })))

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, Check, X } from 'lucide-react'
+import { Bell, Check} from 'lucide-react'
 
 interface Notification {
   id: string
@@ -10,7 +10,7 @@ interface Notification {
   message: string
   read: boolean
   createdAt: string
-  data?: any
+  data?: Record<string, unknown>
 }
 
 export default function NotificationBell() {

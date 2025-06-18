@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Link from 'next/link'
-import { Calendar, Target, Users, Shield } from 'lucide-react'
+import { Calendar, Target, Users} from 'lucide-react'
 
 export default function CleanHomePage() {
   const { data: session, status } = useSession()
@@ -184,7 +184,7 @@ export default function CleanHomePage() {
               margin: 0,
               lineHeight: 1.6
             }}>
-              View your friends' workout schedules and stay motivated together. 
+              View your friends&apos; workout schedules and stay motivated together. 
               Public schedules create accountability and encourage consistency.
             </p>
           </div>
