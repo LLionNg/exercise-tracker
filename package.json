@@ -4,9 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3847",
-    "dev-turbo": "next dev -p 3847 --turbopack",
-    "build": "next build",
-    "start": "next start -p 3847"
+    "build": "prisma generate && next build",
+    "start": "next start -p 3847",
+    "lint": "next lint",
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.9.1",
