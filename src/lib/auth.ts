@@ -12,16 +12,25 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user, account: _account, profile: _profile }) {
       const whitelistedEmails = process.env.WHITELISTED_EMAILS?.split(',').map(email => email.trim()) || []
       return whitelistedEmails.includes(user.email!)
     },
-    async session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id
+    async session({ session, token }) {
+      if (session?.user && token?.sub) {
+        session.user.id = token.sub
       }
       return session
     },
+    async jwt({ user, token }) {
+      if (user) {
+        token.uid = user.id
+      }
+      return token
+    },
+  },
+  session: {
+    strategy: "jwt",
   },
   pages: {
     signIn: '/login',
