@@ -112,10 +112,15 @@ export default function ThemedCalendar({ userId, isOwnCalendar = true }: ThemedC
         </h2>
         {isOwnCalendar && (
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={selectedDate >= new Date(new Date().setHours(0,0,0,0)) ? () => setShowAddModal(true) : undefined}
+            disabled={selectedDate < new Date(new Date().setHours(0,0,0,0))}
             style={{
-              backgroundColor: 'var(--text-accent)',
-              color: 'white',
+              backgroundColor: selectedDate < new Date(new Date().setHours(0,0,0,0)) 
+                ? 'var(--text-tertiary)' 
+                : 'var(--text-accent)',
+              color: selectedDate < new Date(new Date().setHours(0,0,0,0)) 
+                ? 'var(--text-secondary)' 
+                : 'white',
               padding: '12px 20px',
               borderRadius: '8px',
               border: 'none',
@@ -124,23 +129,34 @@ export default function ThemedCalendar({ userId, isOwnCalendar = true }: ThemedC
               gap: '8px',
               fontSize: '14px',
               fontWeight: '500',
-              cursor: 'pointer',
+              cursor: selectedDate < new Date(new Date().setHours(0,0,0,0)) 
+                ? 'not-allowed' 
+                : 'pointer',
               transition: 'all 0.2s ease',
-              boxShadow: 'var(--shadow-sm)'
+              boxShadow: selectedDate < new Date(new Date().setHours(0,0,0,0)) 
+                ? 'none' 
+                : 'var(--shadow-sm)',
+              opacity: selectedDate < new Date(new Date().setHours(0,0,0,0)) ? 0.6 : 1
             }}
             onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--text-accent-hover)'
-              e.currentTarget.style.transform = 'translateY(-1px)'
-              e.currentTarget.style.boxShadow = 'var(--shadow-light)'
+              if (selectedDate >= new Date(new Date().setHours(0,0,0,0))) {
+                e.currentTarget.style.backgroundColor = 'var(--text-accent-hover)'
+                e.currentTarget.style.transform = 'translateY(-1px)'
+                e.currentTarget.style.boxShadow = 'var(--shadow-light)'
+              }
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--text-accent)'
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = 'var(--shadow-sm)'
+              if (selectedDate >= new Date(new Date().setHours(0,0,0,0))) {
+                e.currentTarget.style.backgroundColor = 'var(--text-accent)'
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = 'var(--shadow-sm)'
+              }
             }}
           >
             <Plus size={20} />
-            Add Exercise
+            {selectedDate < new Date(new Date().setHours(0,0,0,0)) 
+              ? 'Past Date' 
+              : 'Add Exercise'}
           </button>
         )}
       </div>
@@ -453,49 +469,25 @@ export default function ThemedCalendar({ userId, isOwnCalendar = true }: ThemedC
                 Loading...
               </div>
             ) : selectedDateSchedules.length === 0 ? (
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '40px 20px',
-                backgroundColor: 'var(--bg-secondary)',
-                borderRadius: '12px',
-                border: '2px dashed var(--border-color)',
-                transition: 'var(--transition-theme)'
-              }}>
-                <Clock size={48} color="var(--text-secondary)" style={{ margin: '0 auto 16px auto', display: 'block' }} />
-                <p style={{ color: 'var(--text-primary)', fontWeight: '600', marginBottom: '8px', margin: '0 0 8px 0', fontSize: '16px' }}>
-                  No exercises scheduled
-                </p>
-                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '20px', margin: '0 0 20px 0' }}>
-                  Add your first workout for this day
-                </p>
-                {isOwnCalendar && (
-                  <button
-                    onClick={() => setShowAddModal(true)}
-                    style={{
-                      backgroundColor: 'var(--text-accent)',
-                      color: 'white',
-                      padding: '10px 20px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--text-accent-hover)'
-                      e.currentTarget.style.transform = 'translateY(-1px)'
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--text-accent)'
-                      e.currentTarget.style.transform = 'translateY(0)'
-                    }}
-                  >
-                    Add Exercise
-                  </button>
-                )}
-              </div>
-            ) : (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '40px 20px',
+                  backgroundColor: 'var(--bg-secondary)',
+                  borderRadius: '12px',
+                  border: '2px dashed var(--border-color)',
+                  transition: 'var(--transition-theme)'
+                }}>
+                  <Clock size={48} color="var(--text-secondary)" style={{ margin: '0 auto 16px auto', display: 'block' }} />
+                  <p style={{ color: 'var(--text-primary)', fontWeight: '600', marginBottom: '8px', margin: '0 0 8px 0', fontSize: '16px' }}>
+                    No exercises scheduled
+                  </p>
+                  <p style={{ fontSize: '14px', color: 'var(--text-secondary)', margin: '0' }}>
+                    {selectedDate < new Date(new Date().setHours(0,0,0,0)) 
+                      ? 'Cannot add exercises to past dates' 
+                      : 'Use the "Add Exercise" button above to schedule a workout'}
+                  </p>
+                </div>
+              ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {selectedDateSchedules.map((schedule) => (
                   <ScheduleCard
@@ -560,9 +552,24 @@ function ScheduleCard({
   const [updating, setUpdating] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const isPast = schedule.date < new Date() && !isSameDay(schedule.date, new Date())
+  const isToday = isSameDay(schedule.date, new Date())
 
   const handleToggleComplete = async () => {
     if (!isOwnCalendar) return
+    if (isPast) return
+    if (isToday && schedule.completed) return
+    if (!schedule.completed && !isToday && !isPast) {
+      const confirmed = confirm(
+        "Hmm... today isn't the scheduled day yet. 🤔\n\nAre you trying to cheat your way to success? Do you still want to mark this as Done?"
+      )
+      if (!confirmed) return
+    }
+    if (isToday && !schedule.completed) {
+      const confirmed = confirm(
+        "Hmm... Are you sure you actually did your exercise? 🤔\n\nAre you being honest with yourself? This can't be undone!"
+      )
+      if (!confirmed) return
+    }
     
     setUpdating(true)
     try {
@@ -586,7 +593,7 @@ function ScheduleCard({
       setUpdating(false)
     }
   }
-
+  
   const handleDelete = async () => {
     if (!isOwnCalendar) return
     
@@ -701,22 +708,23 @@ function ScheduleCard({
           )}
         </div>
         
-        {isOwnCalendar && (
+{isOwnCalendar && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginLeft: '16px' }}>
+            {/* Done/Mark Done Button - Only show if not past */}
             {!isPast && (
               <button
                 onClick={handleToggleComplete}
-                disabled={updating}
+                disabled={updating || (schedule.completed && isToday)}
                 style={{
                   padding: '8px 16px',
                   borderRadius: '8px',
                   border: 'none',
                   fontSize: '12px',
                   fontWeight: '600',
-                  cursor: updating ? 'not-allowed' : 'pointer',
+                  cursor: (updating || (schedule.completed && isToday)) ? 'not-allowed' : 'pointer',
                   backgroundColor: schedule.completed ? 'var(--color-success)' : 'var(--text-secondary)',
                   color: 'white',
-                  opacity: updating ? 0.5 : 1,
+                  opacity: (updating || (schedule.completed && isToday)) ? 0.5 : 1,
                   minWidth: '90px',
                   transition: 'all 0.2s ease',
                   display: 'flex',
@@ -725,13 +733,13 @@ function ScheduleCard({
                   gap: '4px'
                 }}
                 onMouseOver={(e) => {
-                  if (!updating) {
+                  if (!updating && !(schedule.completed && isToday)) {
                     e.currentTarget.style.backgroundColor = schedule.completed ? '#16a34a' : '#4b5563'
                     e.currentTarget.style.transform = 'scale(1.02)'
                   }
                 }}
                 onMouseOut={(e) => {
-                  if (!updating) {
+                  if (!updating && !(schedule.completed && isToday)) {
                     e.currentTarget.style.backgroundColor = schedule.completed ? 'var(--color-success)' : 'var(--text-secondary)'
                     e.currentTarget.style.transform = 'scale(1)'
                   }
@@ -754,20 +762,48 @@ function ScheduleCard({
                 )}
               </button>
             )}
+
+            {/* Missed Button - Only show for past incomplete exercises */}
+            {isPast && !schedule.completed && (
+              <button
+                disabled={true}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'not-allowed',
+                  backgroundColor: 'var(--color-danger)',
+                  color: 'white',
+                  opacity: 0.8,
+                  minWidth: '90px',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px'
+                }}
+              >
+                <Clock size={14} />
+                Missed
+              </button>
+            )}
             
+            {/* Remove Button */}
             <button
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={deleting || isToday}
               style={{
                 padding: '8px 16px',
                 borderRadius: '8px',
                 border: 'none',
                 fontSize: '12px',
                 fontWeight: '600',
-                cursor: deleting ? 'not-allowed' : 'pointer',
-                backgroundColor: 'var(--color-danger)',
+                cursor: (deleting || isToday) ? 'not-allowed' : 'pointer',
+                backgroundColor: isToday ? 'var(--text-tertiary)' : 'var(--color-danger)',
                 color: 'white',
-                opacity: deleting ? 0.5 : 1,
+                opacity: (deleting || isToday) ? 0.5 : 1,
                 minWidth: '90px',
                 transition: 'all 0.2s ease',
                 display: 'flex',
@@ -776,14 +812,14 @@ function ScheduleCard({
                 gap: '4px'
               }}
               onMouseOver={(e) => {
-                if (!deleting) {
+                if (!deleting && !isToday) {
                   e.currentTarget.style.backgroundColor = '#dc2626'
                   e.currentTarget.style.transform = 'scale(1.02)'
                 }
               }}
               onMouseOut={(e) => {
-                if (!deleting) {
-                  e.currentTarget.style.backgroundColor = 'var(--color-danger)'
+                if (!deleting && !isToday) {
+                  e.currentTarget.style.backgroundColor = isToday ? 'var(--text-tertiary)' : 'var(--color-danger)'
                   e.currentTarget.style.transform = 'scale(1)'
                 }
               }}
