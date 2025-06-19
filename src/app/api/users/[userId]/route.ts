@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(
-  _request: NextRequest,
+  _request: NextRequest, 
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
@@ -14,13 +14,16 @@ export async function GET(
     }
 
     const { userId } = await params
+
+    // Get user basic information
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
         name: true,
         email: true,
-        image: true
+        image: true,
+        createdAt: true
       }
     })
 

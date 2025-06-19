@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { startOfMonth, endOfMonth, addDays } from 'date-fns'
+import { startOfMonth, endOfMonth, addDays, startOfDay } from 'date-fns'
+import { toZonedTime, fromZonedTime } from 'date-fns-tz'
 
 export async function GET(_request: NextRequest) {
   try {
@@ -12,31 +13,72 @@ export async function GET(_request: NextRequest) {
     }
 
     const userId = session.user.id
-    const now = new Date()
-    const monthStart = startOfMonth(now)
-    const monthEnd = endOfMonth(now)
-    const nextWeek = addDays(now, 7)
+    
+    // Use Bangkok timezone (Asia/Bangkok)
+    const BANGKOK_TZ = 'Asia/Bangkok'
+    
+    // Get current time in Bangkok timezone
+    const nowUTC = new Date()
+    const nowBangkok = toZonedTime(nowUTC, BANGKOK_TZ)
+    
+    // Get start of today in Bangkok timezone and convert to UTC for database query
+    const todayStartBangkok = startOfDay(nowBangkok)
+    const todayStartUTC = fromZonedTime(todayStartBangkok, BANGKOK_TZ)
+    const todayEndUTC = addDays(todayStartUTC, 1)
+    
+    // Get month boundaries in Bangkok timezone
+    const monthStartBangkok = startOfMonth(nowBangkok)
+    const monthEndBangkok = endOfMonth(nowBangkok)
+    const monthStartUTC = fromZonedTime(monthStartBangkok, BANGKOK_TZ)
+    const monthEndUTC = fromZonedTime(monthEndBangkok, BANGKOK_TZ)
+    
+    // Get next week for upcoming exercises
+    const nextWeekBangkok = addDays(nowBangkok, 7)
+    const nextWeekUTC = fromZonedTime(nextWeekBangkok, BANGKOK_TZ)
 
-    // Get total schedules for current month
+    // FIXED: Count ALL past exercises + today's completed exercises
     const totalSchedules = await prisma.exerciseSchedule.count({
       where: {
         userId,
         date: {
-          gte: monthStart,
-          lte: monthEnd
-        }
+          gte: monthStartUTC,
+          lte: monthEndUTC
+        },
+        OR: [
+          // Include all exercises from completed days (before today)
+          { date: { lt: todayStartUTC } },
+          // Include today's exercises that are already completed
+          { 
+            date: { 
+              gte: todayStartUTC,
+              lt: todayEndUTC
+            },
+            completed: true 
+          }
+        ]
       }
     })
 
-    // Get completed schedules for current month
+    // Get completed schedules (all completed exercises that are eligible)
     const completedSchedules = await prisma.exerciseSchedule.count({
       where: {
         userId,
         completed: true,
         date: {
-          gte: monthStart,
-          lte: monthEnd
-        }
+          gte: monthStartUTC,
+          lte: monthEndUTC
+        },
+        OR: [
+          // Include all completed exercises from past days
+          { date: { lt: todayStartUTC } },
+          // Include today's completed exercises
+          { 
+            date: { 
+              gte: todayStartUTC,
+              lt: todayEndUTC
+            }
+          }
+        ]
       }
     })
 
@@ -66,13 +108,13 @@ export async function GET(_request: NextRequest) {
       }
     })
 
-    // Get upcoming exercises (next 7 days)
+    // Get upcoming exercises (from today onwards, next 7 days)
     const upcomingExercises = await prisma.exerciseSchedule.findMany({
       where: {
         userId,
         date: {
-          gte: now,
-          lte: nextWeek
+          gte: todayStartUTC,  // Include today's exercises
+          lte: nextWeekUTC
         },
         completed: false
       },

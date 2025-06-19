@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { ScheduleResponse, Bet } from '@/types/schedule'
 import { Users, Calendar, Target, ArrowLeft, ChevronRight } from 'lucide-react'
 
@@ -564,6 +565,13 @@ function UserDetailModal({ user, onClose }: {
   const [loading, setLoading] = useState(true)
   const [selectedSchedule, setSelectedSchedule] = useState<ScheduleProps | null>(null)
   const [showBetForm, setShowBetForm] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Ensure component is mounted before creating portal
+  useEffect(() => {
+    setMounted(true)
+    return () => setMounted(false)
+  }, [])
 
   useEffect(() => {
     const fetchSchedules = async () => {
@@ -592,46 +600,174 @@ function UserDetailModal({ user, onClose }: {
     fetchSchedules()
   }, [user.id])
 
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+  const modalContent = (
+    <div 
+      style={{
+        position: 'fixed',
+        inset: '0',
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backdropFilter: 'blur(8px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: '10000',
+        padding: '20px',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          backgroundColor: 'var(--bg-secondary, #1f2937)',
+          borderRadius: '12px',
+          padding: '32px',
+          maxWidth: '600px',
+          width: '100%',
+          maxHeight: '80vh',
+          overflow: 'auto',
+          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.25)',
+          border: '1px solid var(--border-color, #374151)',
+          color: 'var(--text-primary, #f9fafb)'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="modal-header">
-          <h2 className="modal-title">{user.name || 'Anonymous User'}&apos;s Workouts</h2>
-          <p className="modal-subtitle">Upcoming exercises you can bet on</p>
+        <div style={{ marginBottom: '24px' }}>
+          <h2 style={{
+            fontSize: '24px',
+            fontWeight: '700',
+            color: 'var(--text-primary, #f9fafb)',
+            margin: '0 0 8px 0'
+          }}>
+            {user.name || 'Anonymous User'}&apos;s Workouts
+          </h2>
+          <p style={{
+            fontSize: '14px',
+            color: 'var(--text-secondary, #d1d5db)',
+            margin: '0'
+          }}>
+            Upcoming exercises you can bet on
+          </p>
         </div>
 
         {/* Schedules List */}
-        <div className="schedules-container">
+        <div style={{ marginBottom: '24px' }}>
           {loading ? (
-            <div className="loading-state">
+            <div style={{ 
+              textAlign: 'center', 
+              padding: '40px', 
+              color: 'var(--text-secondary, #d1d5db)' 
+            }}>
               <div>Loading schedules...</div>
             </div>
           ) : schedules.length === 0 ? (
-            <div className="empty-state">
-              <Calendar size={48} />
-              <h3>No Upcoming Workouts</h3>
-              <p>This user hasn&apos;t scheduled any workouts for the next week.</p>
+            <div style={{ 
+              textAlign: 'center', 
+              padding: '40px', 
+              color: 'var(--text-secondary, #d1d5db)' 
+            }}>
+              <Calendar size={48} style={{ margin: '0 auto 16px auto', display: 'block' }} />
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                color: 'var(--text-primary, #f9fafb)',
+                margin: '16px 0 8px 0'
+              }}>
+                No Upcoming Workouts
+              </h3>
+              <p style={{ margin: '0' }}>
+                This user hasn&apos;t scheduled any workouts for the next week.
+              </p>
             </div>
           ) : (
-            <div className="schedules-list">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {schedules.map((schedule) => (
-                <ScheduleItem 
+                <div 
                   key={schedule.id}
-                  schedule={schedule}
-                  onBet={() => {
-                    setSelectedSchedule(schedule)
-                    setShowBetForm(true)
+                  style={{
+                    border: '1px solid var(--border-color, #374151)',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    backgroundColor: 'var(--bg-primary, #111827)'
                   }}
-                />
+                >
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <h4 style={{
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        color: 'var(--text-primary, #f9fafb)',
+                        margin: '0 0 4px 0'
+                      }}>
+                        {schedule.exerciseType}
+                      </h4>
+                      <p style={{
+                        fontSize: '14px',
+                        color: 'var(--text-secondary, #d1d5db)',
+                        margin: '0 0 8px 0',
+                        textTransform: 'capitalize'
+                      }}>
+                        {schedule.date.toLocaleDateString()} • {schedule.timeSlot}
+                      </p>
+                      {schedule.bets && schedule.bets.length > 0 && (
+                        <div style={{
+                          backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                          color: '#f59e0b',
+                          padding: '4px 8px',
+                          borderRadius: '12px',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          width: 'fit-content'
+                        }}>
+                          {schedule.bets.length} active bet{schedule.bets.length !== 1 ? 's' : ''}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSelectedSchedule(schedule)
+                        setShowBetForm(true)
+                      }}
+                      disabled={schedule.completed}
+                      style={{
+                        backgroundColor: schedule.completed ? 'var(--bg-tertiary, #374151)' : '#4f46e5',
+                        color: schedule.completed ? 'var(--text-secondary, #d1d5db)' : 'white',
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        cursor: schedule.completed ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      {schedule.completed ? 'Completed' : 'Place Bet'}
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           )}
         </div>
 
         {/* Close Button */}
-        <div className="modal-footer">
-          <button className="btn-close" onClick={onClose}>
+        <div style={{ textAlign: 'center' }}>
+          <button 
+            onClick={onClose}
+            style={{
+              backgroundColor: 'var(--bg-tertiary, #374151)',
+              color: 'var(--text-primary, #f9fafb)',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
+          >
             Close
           </button>
         </div>
@@ -652,108 +788,17 @@ function UserDetailModal({ user, onClose }: {
             }}
           />
         )}
-
-        <style jsx>{`
-          .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-          }
-
-          .modal-content {
-            background-color: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 32px;
-            max-width: 600px;
-            width: 100%;
-            max-height: 80vh;
-            overflow: auto;
-            box-shadow: var(--shadow-lg);
-          }
-
-          .modal-header {
-            margin-bottom: 24px;
-          }
-
-          .modal-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin: 0 0 8px 0;
-          }
-
-          .modal-subtitle {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin: 0;
-          }
-
-          .schedules-container {
-            margin-bottom: 24px;
-          }
-
-          .loading-state, .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-secondary);
-          }
-
-          .empty-state h3 {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin: 16px 0 8px 0;
-          }
-
-          .empty-state p {
-            margin: 0;
-          }
-
-          .schedules-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-          }
-
-          .modal-footer {
-            text-align: center;
-          }
-
-          .btn-close {
-            background-color: var(--bg-tertiary);
-            color: var(--text-primary);
-            padding: 12px 24px;
-            border-radius: 8px;
-            border: none;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-          }
-
-          .btn-close:hover {
-            background-color: var(--bg-hover);
-          }
-
-          :global([data-theme="light"]) {
-            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
-          }
-
-          :global([data-theme="dark"]) {
-            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
-          }
-        `}</style>
       </div>
     </div>
   )
+
+  // Only render portal on client-side after mounting
+  if (!mounted || typeof window === 'undefined') {
+    return null
+  }
+
+  // Create portal directly to document.body
+  return createPortal(modalContent, document.body)
 }
 
 function ScheduleItem({ schedule, onBet }: { 
@@ -853,6 +898,8 @@ function ScheduleItem({ schedule, onBet }: {
   )
 }
 
+// Replace the BettingForm function in your friends page with this enhanced version:
+
 function BettingForm({ schedule, targetUser, onClose, onSuccess }: {
   schedule: { id: string; exerciseType: string; date: Date; timeSlot: string; completed: boolean },
   targetUser: { id: string; name: string; email: string },
@@ -862,6 +909,31 @@ function BettingForm({ schedule, targetUser, onClose, onSuccess }: {
   const [prediction, setPrediction] = useState<boolean>(true)
   const [amount, setAmount] = useState(100)
   const [submitting, setSubmitting] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
+
+  // Ensure component is mounted before creating portal
+  useEffect(() => {
+    setMounted(true)
+    // Add escape key listener
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !submitting) {
+        handleClose()
+      }
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      setMounted(false)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [submitting])
+
+  const handleClose = () => {
+    setIsClosing(true)
+    setTimeout(() => {
+      onClose()
+    }, 200) // Match animation duration
+  }
 
   const handleSubmit = async () => {
     setSubmitting(true)
@@ -892,247 +964,448 @@ function BettingForm({ schedule, targetUser, onClose, onSuccess }: {
         }
     }
 
-  return (
-    <div className="betting-overlay" onClick={onClose}>
-      <div className="betting-modal" onClick={(e) => e.stopPropagation()}>
-        <h3 className="betting-title">Place Your Bet</h3>
+  const modalContent = (
+    <div 
+      style={{
+        position: 'fixed',
+        inset: '0',
+        backgroundColor: isClosing ? 'rgba(0, 0, 0, 0)' : 'rgba(0, 0, 0, 0.8)',
+        backdropFilter: isClosing ? 'blur(0px)' : 'blur(12px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: '999999',
+        padding: '20px',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        animation: isClosing ? 'fadeOut 0.2s ease-out forwards' : 'fadeIn 0.3s ease-out forwards'
+      }}
+      onClick={handleClose}
+    >
+      <div 
+        style={{
+          backgroundColor: 'var(--bg-secondary, #1e293b)',
+          borderRadius: '20px',
+          padding: '32px',
+          maxWidth: '450px',
+          width: '100%',
+          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5)',
+          border: '1px solid var(--border-color, #475569)',
+          position: 'relative',
+          color: 'var(--text-primary, #f8fafc)',
+          transform: isClosing ? 'scale(0.95) translateY(20px)' : 'scale(1) translateY(0)',
+          opacity: isClosing ? '0' : '1',
+          transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          animation: isClosing ? 'modalSlideOut 0.2s ease-out forwards' : 'modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close Button */}
+        <button
+          onClick={handleClose}
+          disabled={submitting}
+          style={{
+            position: 'absolute',
+            top: '16px',
+            right: '16px',
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            border: 'none',
+            backgroundColor: 'var(--bg-tertiary, #334155)',
+            color: 'var(--text-secondary, #cbd5e1)',
+            cursor: submitting ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            transition: 'all 0.2s ease',
+            opacity: submitting ? '0.5' : '1'
+          }}
+          onMouseOver={(e) => {
+            if (!submitting) {
+              e.currentTarget.style.backgroundColor = 'var(--bg-quaternary, #475569)'
+              e.currentTarget.style.transform = 'scale(1.1)'
+            }
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--bg-tertiary, #334155)'
+            e.currentTarget.style.transform = 'scale(1)'
+          }}
+        >
+          ×
+        </button>
+
+        <h3 style={{
+          fontSize: '28px',
+          fontWeight: '800',
+          color: 'var(--text-primary, #f8fafc)',
+          margin: '0 0 24px 0',
+          textAlign: 'center',
+          background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text'
+        }}>
+          Place Your Bet
+        </h3>
         
-        <div className="bet-target-info">
-          <p className="bet-target-label">Betting on</p>
-          <p className="bet-target-name">
+        <div style={{
+          backgroundColor: 'var(--bg-primary, #0f172a)',
+          padding: '24px',
+          borderRadius: '16px',
+          marginBottom: '28px',
+          border: '1px solid var(--border-color, #475569)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Subtle gradient overlay */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '2px',
+            background: 'linear-gradient(90deg, #4f46e5, #7c3aed, #ec4899)',
+            borderRadius: '16px 16px 0 0'
+          }} />
+          
+          <p style={{
+            fontSize: '14px',
+            color: 'var(--text-secondary, #cbd5e1)',
+            margin: '0 0 12px 0',
+            fontWeight: '600',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px'
+          }}>
+            Betting Target
+          </p>
+          <p style={{
+            fontSize: '20px',
+            fontWeight: '800',
+            color: 'var(--text-primary, #f8fafc)',
+            margin: '0',
+            lineHeight: '1.2'
+          }}>
             {targetUser.name}&apos;s {schedule.exerciseType}
           </p>
-          <p className="bet-target-details">
+          <p style={{
+            fontSize: '15px',
+            color: 'var(--text-secondary, #cbd5e1)',
+            margin: '12px 0 0 0',
+            fontWeight: '500',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span style={{ 
+              width: '8px', 
+              height: '8px', 
+              backgroundColor: '#4f46e5', 
+              borderRadius: '50%',
+              display: 'inline-block'
+            }} />
             {schedule.date.toLocaleDateString()} • {schedule.timeSlot}
           </p>
         </div>
 
-        <div className="form-section">
-          <label className="form-label">Your Prediction</label>
-          <div className="prediction-buttons">
+        <div style={{ marginBottom: '28px' }}>
+          <label style={{
+            display: 'block',
+            fontSize: '18px',
+            fontWeight: '700',
+            color: 'var(--text-primary, #f8fafc)',
+            marginBottom: '16px'
+          }}>
+            Your Prediction
+          </label>
+          <div style={{ display: 'flex', gap: '16px' }}>
             <button
-              className={`prediction-btn ${prediction ? 'active success' : ''}`}
+              style={{
+                flex: '1',
+                padding: '20px 16px',
+                borderRadius: '16px',
+                border: prediction ? '3px solid #22c55e' : '2px solid var(--border-color, #475569)',
+                backgroundColor: prediction ? 'rgba(34, 197, 94, 0.15)' : 'var(--bg-secondary, #1e293b)',
+                color: prediction ? '#22c55e' : 'var(--text-secondary, #cbd5e1)',
+                fontSize: '16px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: prediction ? 'scale(1.02)' : 'scale(1)',
+                boxShadow: prediction ? '0 8px 25px rgba(34, 197, 94, 0.25)' : 'none',
+                position: 'relative',
+                overflow: 'hidden'
+              }}
               onClick={() => setPrediction(true)}
+              onMouseOver={(e) => {
+                if (!prediction) {
+                  e.currentTarget.style.backgroundColor = 'var(--bg-hover, #334155)'
+                  e.currentTarget.style.transform = 'scale(1.02)'
+                }
+              }}
+              onMouseOut={(e) => {
+                if (!prediction) {
+                  e.currentTarget.style.backgroundColor = 'var(--bg-secondary, #1e293b)'
+                  e.currentTarget.style.transform = 'scale(1)'
+                }
+              }}
             >
-              Will Complete ✅
+              {prediction && (
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05))',
+                  borderRadius: '13px'
+                }} />
+              )}
+              <span style={{ position: 'relative', zIndex: 1 }}>
+                Will Complete ✅
+              </span>
             </button>
             <button
-              className={`prediction-btn ${!prediction ? 'active danger' : ''}`}
+              style={{
+                flex: '1',
+                padding: '20px 16px',
+                borderRadius: '16px',
+                border: !prediction ? '3px solid #ef4444' : '2px solid var(--border-color, #475569)',
+                backgroundColor: !prediction ? 'rgba(239, 68, 68, 0.15)' : 'var(--bg-secondary, #1e293b)',
+                color: !prediction ? '#ef4444' : 'var(--text-secondary, #cbd5e1)',
+                fontSize: '16px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: !prediction ? 'scale(1.02)' : 'scale(1)',
+                boxShadow: !prediction ? '0 8px 25px rgba(239, 68, 68, 0.25)' : 'none',
+                position: 'relative',
+                overflow: 'hidden'
+              }}
               onClick={() => setPrediction(false)}
+              onMouseOver={(e) => {
+                if (prediction) {
+                  e.currentTarget.style.backgroundColor = 'var(--bg-hover, #334155)'
+                  e.currentTarget.style.transform = 'scale(1.02)'
+                }
+              }}
+              onMouseOut={(e) => {
+                if (prediction) {
+                  e.currentTarget.style.backgroundColor = 'var(--bg-secondary, #1e293b)'
+                  e.currentTarget.style.transform = 'scale(1)'
+                }
+              }}
             >
-              Will Miss ❌
+              {!prediction && (
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05))',
+                  borderRadius: '13px'
+                }} />
+              )}
+              <span style={{ position: 'relative', zIndex: 1 }}>
+                Will Miss ❌
+              </span>
             </button>
           </div>
         </div>
 
-        <div className="form-section">
-          <label className="form-label">Bet Amount (Baht)</label>
-          <input
-            className="amount-input"
-            type="number"
-            min="50"
-            max="1000"
-            step="50"
-            value={amount}
-            onChange={(e) => setAmount(Number(e.target.value))}
-          />
+        <div style={{ marginBottom: '32px' }}>
+          <label style={{
+            display: 'block',
+            fontSize: '18px',
+            fontWeight: '700',
+            color: 'var(--text-primary, #f8fafc)',
+            marginBottom: '16px'
+          }}>
+            Bet Amount (Baht)
+          </label>
+          <div style={{ position: 'relative' }}>
+            <input
+              type="number"
+              min="50"
+              max="1000"
+              step="50"
+              value={amount}
+              onChange={(e) => setAmount(Number(e.target.value))}
+              style={{
+                width: '100%',
+                padding: '20px 24px',
+                borderRadius: '16px',
+                border: '2px solid var(--border-color, #475569)',
+                backgroundColor: 'var(--bg-tertiary, #334155)',
+                color: 'var(--text-primary, #f8fafc)',
+                fontSize: '24px',
+                fontWeight: '700',
+                boxSizing: 'border-box',
+                textAlign: 'center',
+                transition: 'all 0.3s ease',
+                outline: 'none'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#4f46e5'
+                e.currentTarget.style.backgroundColor = 'var(--bg-secondary, #1e293b)'
+                e.currentTarget.style.transform = 'scale(1.02)'
+                e.currentTarget.style.boxShadow = '0 0 0 4px rgba(79, 70, 229, 0.1)'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-color, #475569)'
+                e.currentTarget.style.backgroundColor = 'var(--bg-tertiary, #334155)'
+                e.currentTarget.style.transform = 'scale(1)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            />
+            <div style={{
+              position: 'absolute',
+              right: '24px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              fontSize: '16px',
+              fontWeight: '600',
+              color: 'var(--text-secondary, #cbd5e1)',
+              pointerEvents: 'none'
+            }}>
+              ฿
+            </div>
+          </div>
         </div>
 
-        <div className="form-actions">
+        <div style={{ display: 'flex', gap: '16px', marginTop: '32px' }}>
           <button
-            className="btn-cancel"
-            onClick={onClose}
+            onClick={handleClose}
             disabled={submitting}
+            style={{
+              flex: '1',
+              backgroundColor: 'var(--bg-tertiary, #334155)',
+              color: 'var(--text-primary, #f8fafc)',
+              padding: '18px 24px',
+              borderRadius: '16px',
+              border: '2px solid var(--border-color, #475569)',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: submitting ? 'not-allowed' : 'pointer',
+              opacity: submitting ? '0.5' : '1',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseOver={(e) => {
+              if (!submitting) {
+                e.currentTarget.style.backgroundColor = 'var(--bg-hover, #475569)'
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.3)'
+              }
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-tertiary, #334155)'
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
           >
             Cancel
           </button>
           <button
-            className="btn-submit"
             onClick={handleSubmit}
             disabled={submitting}
+            style={{
+              flex: '2',
+              background: submitting ? '#6b7280' : 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+              color: 'white',
+              padding: '18px 24px',
+              borderRadius: '16px',
+              border: 'none',
+              fontSize: '18px',
+              fontWeight: '800',
+              cursor: submitting ? 'not-allowed' : 'pointer',
+              opacity: submitting ? '0.7' : '1',
+              boxShadow: submitting ? 'none' : '0 8px 25px rgba(79, 70, 229, 0.4)',
+              transition: 'all 0.3s ease',
+              position: 'relative',
+              overflow: 'hidden'
+            }}
+            onMouseOver={(e) => {
+              if (!submitting) {
+                e.currentTarget.style.transform = 'translateY(-3px)'
+                e.currentTarget.style.boxShadow = '0 12px 30px rgba(79, 70, 229, 0.6)'
+              }
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(79, 70, 229, 0.4)'
+            }}
           >
-            {submitting ? 'Placing Bet...' : `Bet ${amount} Baht`}
+            {submitting && (
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '24px',
+                transform: 'translateY(-50%)',
+                width: '20px',
+                height: '20px',
+                border: '2px solid white',
+                borderTop: '2px solid transparent',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite'
+              }} />
+            )}
+            <span style={{ marginLeft: submitting ? '32px' : '0', transition: 'margin-left 0.3s ease' }}>
+              {submitting ? 'Placing Bet...' : `Bet ${amount} ฿`}
+            </span>
           </button>
         </div>
 
-        <style jsx>{`
-          .betting-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1001;
-            padding: 20px;
+        {/* Keyframes for animations */}
+        <style>{`
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
           }
-
-          .betting-modal {
-            background-color: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 32px;
-            max-width: 400px;
-            width: 100%;
-            box-shadow: var(--shadow-lg);
+          
+          @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
           }
-
-          .betting-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin: 0 0 16px 0;
+          
+          @keyframes modalSlideIn {
+            from { 
+              opacity: 0; 
+              transform: scale(0.8) translateY(30px); 
+            }
+            to { 
+              opacity: 1; 
+              transform: scale(1) translateY(0); 
+            }
           }
-
-          .bet-target-info {
-            background-color: var(--bg-primary);
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 24px;
+          
+          @keyframes modalSlideOut {
+            from { 
+              opacity: 1; 
+              transform: scale(1) translateY(0); 
+            }
+            to { 
+              opacity: 0; 
+              transform: scale(0.9) translateY(20px); 
+            }
           }
-
-          .bet-target-label {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin: 0 0 8px 0;
+          
+          @keyframes spin {
+            0% { transform: translateY(-50%) rotate(0deg); }
+            100% { transform: translateY(-50%) rotate(360deg); }
           }
+        `}</style>
+      </div>
+    </div>
+  )
 
-          .bet-target-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin: 0;
-          }
+  // Only render portal on client-side after mounting
+  if (!mounted || typeof window === 'undefined') {
+    return null
+  }
 
-          .bet-target-details {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin: 4px 0 0 0;
-          }
-
-          .form-section {
-            margin-bottom: 20px;
-          }
-
-          .form-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-          }
-
-          .prediction-buttons {
-           display: flex;
-           gap: 8px;
-         }
-
-         .prediction-btn {
-           flex: 1;
-           padding: 12px;
-           border-radius: 8px;
-           border: 2px solid var(--border-color);
-           background-color: var(--bg-secondary);
-           color: var(--text-secondary);
-           font-size: 14px;
-           font-weight: 500;
-           cursor: pointer;
-           transition: all 0.2s ease;
-         }
-
-         .prediction-btn.active.success {
-           border-color: var(--color-success);
-           background-color: var(--color-success-light);
-           color: var(--color-success-dark);
-         }
-
-         .prediction-btn.active.danger {
-           border-color: var(--color-danger);
-           background-color: var(--color-danger-light);
-           color: var(--color-danger-dark);
-         }
-
-         .amount-input {
-           width: 100%;
-           padding: 12px;
-           border-radius: 8px;
-           border: 1px solid var(--border-color);
-           background-color: var(--bg-secondary);
-           color: var(--text-primary);
-           font-size: 16px;
-           box-sizing: border-box;
-         }
-
-         .amount-input:focus {
-           outline: none;
-           border-color: var(--color-blue);
-         }
-
-         .form-actions {
-           display: flex;
-           gap: 12px;
-         }
-
-         .btn-cancel {
-           flex: 1;
-           background-color: var(--bg-tertiary);
-           color: var(--text-primary);
-           padding: 12px;
-           border-radius: 8px;
-           border: none;
-           font-size: 14px;
-           font-weight: 500;
-           cursor: pointer;
-           transition: background-color 0.2s ease;
-         }
-
-         .btn-cancel:hover:not(:disabled) {
-           background-color: var(--bg-hover);
-         }
-
-         .btn-submit {
-           flex: 1;
-           background-color: var(--color-blue);
-           color: white;
-           padding: 12px;
-           border-radius: 8px;
-           border: none;
-           font-size: 14px;
-           font-weight: 500;
-           cursor: pointer;
-           transition: background-color 0.2s ease;
-         }
-
-         .btn-submit:hover:not(:disabled) {
-           background-color: var(--color-blue-dark);
-         }
-
-         .btn-submit:disabled {
-           background-color: var(--text-secondary);
-           cursor: not-allowed;
-         }
-
-         :global([data-theme="light"]) {
-           --color-success: #10b981;
-           --color-success-light: #d1fae5;
-           --color-success-dark: #065f46;
-           --color-danger: #ef4444;
-           --color-danger-light: #fee2e2;
-           --color-danger-dark: #991b1b;
-         }
-
-         :global([data-theme="dark"]) {
-           --color-success: #34d399;
-           --color-success-light: #064e3b;
-           --color-success-dark: #6ee7b7;
-           --color-danger: #f87171;
-           --color-danger-light: #7f1d1d;
-           --color-danger-dark: #fca5a5;
-         }
-       `}</style>
-     </div>
-   </div>
- )
+  // Create portal directly to document.body
+  return createPortal(modalContent, document.body)
 }

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { addDays, startOfDay } from 'date-fns'
+import { toZonedTime, fromZonedTime } from 'date-fns-tz'
+
+const BANGKOK_TZ = 'Asia/Bangkok'
 
 export async function GET(_request: NextRequest) {
   try {
@@ -9,6 +13,19 @@ export async function GET(_request: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    // Get current time in Bangkok timezone
+    const nowUTC = new Date()
+    const nowBangkok = toZonedTime(nowUTC, BANGKOK_TZ)
+    
+    // Get start of today in Bangkok timezone
+    const todayStartBangkok = startOfDay(nowBangkok)
+    const todayStartUTC = fromZonedTime(todayStartBangkok, BANGKOK_TZ)
+    const todayEndUTC = addDays(todayStartUTC, 1)
+    
+    // Get next week for upcoming workouts
+    const oneWeekLater = addDays(nowBangkok, 7)
+    const oneWeekLaterUTC = fromZonedTime(oneWeekLater, BANGKOK_TZ)
 
     // Get all users except the current user
     const users = await prisma.user.findMany({
@@ -41,20 +58,34 @@ export async function GET(_request: NextRequest) {
       }
     })
 
-    // Calculate stats for each user
+    // Calculate stats for each user with Bangkok timezone consideration
     const usersWithStats = users.map(user => {
-      const totalSchedules = user._count.schedules
-      const completedSchedules = user.schedules.filter(s => s.completed).length
+      // FIXED: Include past exercises + today's completed exercises only
+      const eligibleSchedules = user.schedules.filter(s => {
+        const scheduleDate = new Date(s.date)
+        
+        // Include all past exercises
+        if (scheduleDate < todayStartUTC) return true
+        
+        // Include today's completed exercises only
+        if (scheduleDate >= todayStartUTC && 
+            scheduleDate < todayEndUTC && 
+            s.completed) return true
+        
+        return false
+      })
+      
+      const totalSchedules = eligibleSchedules.length
+      const completedSchedules = eligibleSchedules.filter(s => s.completed).length
       const completionRate = totalSchedules > 0 ? Math.round((completedSchedules / totalSchedules) * 100) : 0
       
-      // Count upcoming workouts (next 7 days)
-      const now = new Date()
-      const oneWeekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
-      const upcomingWorkouts = user.schedules.filter(s => 
-        new Date(s.date) >= now && 
-        new Date(s.date) <= oneWeekLater && 
-        !s.completed
-      ).length
+      // Count upcoming workouts (from today onwards, next 7 days)
+      const upcomingWorkouts = user.schedules.filter(s => {
+        const scheduleDate = new Date(s.date)
+        return scheduleDate >= todayStartUTC && 
+               scheduleDate <= oneWeekLaterUTC && 
+               !s.completed
+      }).length
 
       return {
         id: user.id,

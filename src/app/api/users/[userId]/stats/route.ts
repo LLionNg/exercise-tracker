@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { startOfMonth, endOfMonth, addDays, startOfDay, subDays } from 'date-fns'
+import { toZonedTime, fromZonedTime } from 'date-fns-tz'
 
 export async function GET(
-  _request: NextRequest,
+  _request: NextRequest, 
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
@@ -14,74 +16,148 @@ export async function GET(
     }
 
     const { userId } = await params
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        _count: {
-          select: {
-            schedules: true,
-            betsReceived: {
-              where: {
-                status: 'ACTIVE'
-              }
-            }
-          }
+
+    // Use Bangkok timezone
+    const BANGKOK_TZ = 'Asia/Bangkok'
+    const nowUTC = new Date()
+    const nowBangkok = toZonedTime(nowUTC, BANGKOK_TZ)
+    
+    // Get start of today in Bangkok timezone
+    const todayStartBangkok = startOfDay(nowBangkok)
+    const todayStartUTC = fromZonedTime(todayStartBangkok, BANGKOK_TZ)
+    const todayEndUTC = addDays(todayStartUTC, 1)
+    
+    // Get month boundaries
+    const monthStartBangkok = startOfMonth(nowBangkok)
+    const monthEndBangkok = endOfMonth(nowBangkok)
+    const monthStartUTC = fromZonedTime(monthStartBangkok, BANGKOK_TZ)
+    const monthEndUTC = fromZonedTime(monthEndBangkok, BANGKOK_TZ)
+    
+    // Get next week for upcoming exercises
+    const nextWeekBangkok = addDays(nowBangkok, 7)
+    const nextWeekUTC = fromZonedTime(nextWeekBangkok, BANGKOK_TZ)
+
+    // FIXED: Count ALL past exercises + today's completed exercises
+    const totalSchedules = await prisma.exerciseSchedule.count({
+      where: {
+        userId,
+        date: {
+          gte: monthStartUTC,
+          lte: monthEndUTC
         },
-        schedules: {
-          select: {
-            completed: true,
-            date: true
+        OR: [
+          // Include all exercises from completed days (before today)
+          { date: { lt: todayStartUTC } },
+          // Include today's exercises that are already completed
+          { 
+            date: { 
+              gte: todayStartUTC,
+              lt: todayEndUTC
+            },
+            completed: true 
           }
-        }
+        ]
       }
     })
 
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
+    // Get completed schedules (all completed exercises that are eligible)
+    const completedSchedules = await prisma.exerciseSchedule.count({
+      where: {
+        userId,
+        completed: true,
+        date: {
+          gte: monthStartUTC,
+          lte: monthEndUTC
+        },
+        OR: [
+          // Include all completed exercises from past days
+          { date: { lt: todayStartUTC } },
+          // Include today's completed exercises
+          { 
+            date: { 
+              gte: todayStartUTC,
+              lt: todayEndUTC
+            }
+          }
+        ]
+      }
+    })
 
-    const totalSchedules = user._count.schedules
-    const completedSchedules = user.schedules.filter(s => s.completed).length
+    // Calculate completion rate
     const completionRate = totalSchedules > 0 ? Math.round((completedSchedules / totalSchedules) * 100) : 0
-    
-    // Calculate streak days (consecutive days with completed workouts)
-    const sortedCompletedDates = user.schedules
-      .filter(s => s.completed)
-      .map(s => new Date(s.date))
-      .sort((a, b) => b.getTime() - a.getTime())
-    
+
+    // Get active bets on this user
+    const activeBets = await prisma.bet.count({
+      where: {
+        targetId: userId,
+        status: 'ACTIVE'
+      }
+    })
+
+    // Calculate streak days (consecutive completed days)
     let streakDays = 0
-    const currentDate = new Date()
-    currentDate.setHours(0, 0, 0, 0)
+    let checkDate = subDays(todayStartUTC, 1) // Start from yesterday
     
-    for (const date of sortedCompletedDates) {
-      const scheduleDate = new Date(date)
-      scheduleDate.setHours(0, 0, 0, 0)
+    // Check the last 30 days for streak calculation
+    for (let i = 0; i < 30; i++) {
+      const dayStart = startOfDay(checkDate)
+      const dayEnd = addDays(dayStart, 1)
       
-      if (scheduleDate.getTime() === currentDate.getTime()) {
+      const scheduleCount = await prisma.exerciseSchedule.count({
+        where: {
+          userId,
+          date: {
+            gte: dayStart,
+            lt: dayEnd
+          }
+        }
+      })
+      
+      if (scheduleCount === 0) {
+        // No exercise scheduled for this day, continue streak
+        checkDate = subDays(checkDate, 1)
+        continue
+      }
+      
+      const completedCount = await prisma.exerciseSchedule.count({
+        where: {
+          userId,
+          date: {
+            gte: dayStart,
+            lt: dayEnd
+          },
+          completed: true
+        }
+      })
+      
+      if (completedCount === scheduleCount) {
+        // All exercises completed for this day
         streakDays++
-        currentDate.setDate(currentDate.getDate() - 1)
-      } else if (scheduleDate.getTime() < currentDate.getTime()) {
+        checkDate = subDays(checkDate, 1)
+      } else {
+        // Not all exercises completed, break streak
         break
       }
     }
 
-    // Count this week's workouts
-    const now = new Date()
-    const startOfWeek = new Date(now)
-    startOfWeek.setDate(now.getDate() - now.getDay())
-    startOfWeek.setHours(0, 0, 0, 0)
-    
-    const thisWeekWorkouts = user.schedules.filter(s => {
-      const scheduleDate = new Date(s.date)
-      return scheduleDate >= startOfWeek && scheduleDate <= now && s.completed
-    }).length
+    // Get this week's workouts (including today)
+    const thisWeekStart = subDays(todayStartUTC, nowBangkok.getDay()) // Start of week
+    const thisWeekWorkouts = await prisma.exerciseSchedule.count({
+      where: {
+        userId,
+        date: {
+          gte: thisWeekStart,
+          lt: nextWeekUTC
+        },
+        completed: true
+      }
+    })
 
     const stats = {
       totalSchedules,
       completedSchedules,
       completionRate,
-      activeBets: user._count.betsReceived,
+      activeBets,
       streakDays,
       thisWeekWorkouts
     }

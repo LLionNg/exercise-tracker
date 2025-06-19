@@ -549,8 +549,10 @@ body {
   }
 }
 
-/* Smooth theme transition for all elements */
-*, *::before, *::after {
+/* FIXED: Smooth theme transition for non-modal elements only */
+*:not(.modal-overlay):not(.betting-overlay):not(.modal-content):not(.betting-modal),
+*:not(.modal-overlay):not(.betting-overlay):not(.modal-content):not(.betting-modal)::before,
+*:not(.modal-overlay):not(.betting-overlay):not(.modal-content):not(.betting-modal)::after {
   transition: var(--transition-theme);
 }
 
