@@ -708,7 +708,7 @@ function ScheduleCard({
           )}
         </div>
         
-{isOwnCalendar && (
+        {isOwnCalendar && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginLeft: '16px' }}>
             {/* Done/Mark Done Button - Only show if not past */}
             {!isPast && (
@@ -763,6 +763,33 @@ function ScheduleCard({
               </button>
             )}
 
+            {/* Done Button - Only show for past completed exercises (grayed out) */}
+            {isPast && schedule.completed && (
+              <button
+                disabled={true}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'not-allowed',
+                  backgroundColor: 'var(--text-tertiary)',
+                  color: 'white',
+                  opacity: 0.5,
+                  minWidth: '90px',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px'
+                }}
+              >
+                <CheckCircle size={14} />
+                Done
+              </button>
+            )}
+
             {/* Missed Button - Only show for past incomplete exercises */}
             {isPast && !schedule.completed && (
               <button
@@ -793,17 +820,17 @@ function ScheduleCard({
             {/* Remove Button */}
             <button
               onClick={handleDelete}
-              disabled={deleting || isToday}
+              disabled={deleting || isToday || isPast}
               style={{
                 padding: '8px 16px',
                 borderRadius: '8px',
                 border: 'none',
                 fontSize: '12px',
                 fontWeight: '600',
-                cursor: (deleting || isToday) ? 'not-allowed' : 'pointer',
-                backgroundColor: isToday ? 'var(--text-tertiary)' : 'var(--color-danger)',
+                cursor: (deleting || isToday || isPast) ? 'not-allowed' : 'pointer',
+                backgroundColor: (isToday || isPast) ? 'var(--text-tertiary)' : 'var(--color-danger)',
                 color: 'white',
-                opacity: (deleting || isToday) ? 0.5 : 1,
+                opacity: (deleting || isToday || isPast) ? 0.5 : 1,
                 minWidth: '90px',
                 transition: 'all 0.2s ease',
                 display: 'flex',
@@ -812,14 +839,14 @@ function ScheduleCard({
                 gap: '4px'
               }}
               onMouseOver={(e) => {
-                if (!deleting && !isToday) {
+                if (!deleting && !isToday && !isPast) {
                   e.currentTarget.style.backgroundColor = '#dc2626'
                   e.currentTarget.style.transform = 'scale(1.02)'
                 }
               }}
               onMouseOut={(e) => {
-                if (!deleting && !isToday) {
-                  e.currentTarget.style.backgroundColor = isToday ? 'var(--text-tertiary)' : 'var(--color-danger)'
+                if (!deleting && !isToday && !isPast) {
+                  e.currentTarget.style.backgroundColor = (isToday || isPast) ? 'var(--text-tertiary)' : 'var(--color-danger)'
                   e.currentTarget.style.transform = 'scale(1)'
                 }
               }}
