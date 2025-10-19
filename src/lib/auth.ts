@@ -1,7 +1,7 @@
-import { NextAuthOptions } from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
-import { PrismaAdapter } from "@auth/prisma-adapter"
-import { prisma } from "./prisma"
+import { NextAuthOptions } from 'next-auth';
+import GoogleProvider from 'next-auth/providers/google';
+import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import { prisma } from './prisma';
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -12,27 +12,31 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user }) {
-      const whitelistedEmails = process.env.WHITELISTED_EMAILS?.split(',').map(email => email.trim()) || []
-      return whitelistedEmails.includes(user.email!)
-    },
-    async session({ session, token }) {
-      if (session?.user && token?.sub) {
-        session.user.id = token.sub
+    async signIn({ user, account, profile }) {
+      const whitelistedEmails = process.env.WHITELISTED_EMAILS?.split(',').map(e => e.trim()) || [];
+      
+      if (!user.email) return false;
+      
+      const isWhitelisted = whitelistedEmails.includes(user.email);
+      
+      if (!isWhitelisted) {
+        return false;
       }
-      return session
+      
+      return true;
     },
-    async jwt({ user, token }) {
-      if (user) {
-        token.uid = user.id
+    async session({ session, user }) {
+      if (session.user) {
+        session.user.id = user.id;
       }
-      return token
+      return session;
     },
-  },
-  session: {
-    strategy: "jwt",
   },
   pages: {
     signIn: '/login',
+    error: '/login',
   },
-}
+  session: {
+    strategy: 'database',
+  },
+};
