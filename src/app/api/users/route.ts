@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { addDays, startOfDay } from 'date-fns'
 import { toZonedTime, fromZonedTime } from 'date-fns-tz'
 
+export const dynamic = 'force-dynamic';
 const BANGKOK_TZ = 'Asia/Bangkok'
 
 export async function GET(_request: NextRequest) {

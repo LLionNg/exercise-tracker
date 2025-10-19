@@ -5,6 +5,9 @@ import { prisma } from '@/lib/prisma'
 import { startOfMonth, endOfMonth, addDays, startOfDay } from 'date-fns'
 import { toZonedTime, fromZonedTime } from 'date-fns-tz'
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)

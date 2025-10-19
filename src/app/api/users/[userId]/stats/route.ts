@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma'
 import { startOfMonth, endOfMonth, addDays, startOfDay, subDays } from 'date-fns'
 import { toZonedTime, fromZonedTime } from 'date-fns-tz'
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   _request: NextRequest, 
   { params }: { params: Promise<{ userId: string }> }
